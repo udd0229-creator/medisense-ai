@@ -32,10 +32,8 @@ DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 # For a real deployment list your domain instead, e.g. ["yourname.pythonanywhere.com"].
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,medisense-ai-wbe1.onrender.com,vercel.app,medisense-celk0vj3-medisense-ai1.vercel.app"
-
+    "localhost,127.0.0.1,medisense-ai-wbe1.onrender.com,.vercel.app"
 ).split(",")
-
 # Application definition
 
 INSTALLED_APPS = [
