@@ -30,11 +30,15 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 # '*' lets phones on the same Wi-Fi (and the Android app) reach the dev server.
 # For a real deployment list your domain instead, e.g. ["yourname.pythonanywhere.com"].
+
+
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1,medisense-ai-wbe1.onrender.com,.vercel.app"
 ).split(",")
 # Application definition
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
