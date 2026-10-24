@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block auth %}
+<div class="auth-wrap d-flex align-items-center justify-content-center p-3">
+  <div class="card p-4" style="max-width: 400px; width: 100%;">
+    <div class="text-center mb-3">
+      <i class="bi bi-capsule-pill" style="font-size:2.5rem;color:#0f766e"></i>
+      <h1 class="h4 mt-2 mb-0">MediSense AI</h1>
+      <div class="small-muted">Medicine Expiry Risk &amp; Inventory Optimization</div>
+    </div>
+    {% if form.errors %}<div class="alert alert-danger py-2">Invalid username or password.</div>{% endif %}
+    <form method="post">{% csrf_token %}
+      <div class="mb-3"><label class="form-label">Username</label>
+        <input name="username" class="form-control" autofocus required></div>
+      <div class="mb-3"><label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required></div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-brand w-100">Login</button>
+    </form>
+    <div class="small-muted text-center mt-3">Demo: pharmacist / pharma@123 &middot; admin / admin@123</div>
+  </div>
+</div>
+{% endblock %}

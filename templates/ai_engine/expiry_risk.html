@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}Expiry Risk{% endblock %}
+{% block heading %}AI Expiry Risk Analysis{% endblock %}
+{% block actions %}<a href="{% url 'expiry_risk_csv' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download"></i> CSV</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><a href="?level=Expired" class="text-decoration-none"><div class="card kpi p-3 border-start border-4 border-dark"><div class="label">Expired</div><div class="value">{{ counts.Expired|default:0 }}</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="?level=High" class="text-decoration-none"><div class="card kpi p-3 border-start border-4 border-danger"><div class="label">High risk (&ge;70%)</div><div class="value text-danger">{{ counts.High|default:0 }}</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="?level=Medium" class="text-decoration-none"><div class="card kpi p-3 border-start border-4 border-warning"><div class="label">Medium risk (40&ndash;70%)</div><div class="value text-warning">{{ counts.Medium|default:0 }}</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="?level=Low" class="text-decoration-none"><div class="card kpi p-3 border-start border-4 border-success"><div class="label">Low risk (&lt;40%)</div><div class="value text-success">{{ counts.Low|default:0 }}</div></div></a></div>
+</div>
+<div class="card p-3">
+<form class="d-flex flex-wrap gap-2 mb-3 align-items-center" method="get">
+  <select name="level" class="form-select form-select-sm" style="max-width:160px"><option value="">All levels</option>
+    <option {% if level == 'Expired' %}selected{% endif %}>Expired</option><option {% if level == 'High' %}selected{% endif %}>High</option>
+    <option {% if level == 'Medium' %}selected{% endif %}>Medium</option><option {% if level == 'Low' %}selected{% endif %}>Low</option></select>
+  <select name="category" class="form-select form-select-sm" style="max-width:220px"><option value="">All categories</option>
+    {% for c in categories %}<option value="{{ c.id }}" {% if category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <button class="btn btn-sm btn-outline-secondary">Filter</button>
+  <span class="ms-auto small">Potential loss in shown High/Expired batches: <b class="text-danger">{{ total_loss|inr }}</b></span>
+</form>
+<div class="table-responsive"><table class="table table-hover table-sm">
+<thead><tr><th>Medicine / batch</th><th>Expiry</th><th>Days left</th><th>Qty</th><th>Sales/day</th><th>Days of stock</th><th>Risk score</th><th>Exp. unsold</th><th>Exp. loss</th><th>Recommended action</th></tr></thead>
+<tbody>{% for r in risks %}<tr>
+  <td><a href="{% url 'medicine_detail' r.batch.medicine_id %}">{{ r.batch.medicine.name }}</a><div class="small-muted">{{ r.batch.batch_no }}</div></td>
+  <td>{{ r.batch.expiry_date|date:"d M Y" }}</td><td>{{ r.batch.days_to_expiry }}</td><td>{{ r.batch.quantity }}</td>
+  <td>{{ r.features.avg_daily_sales|default:"-" }}</td><td>{{ r.features.days_of_stock|default:"-" }}</td>
+  <td><span class="badge bg-{{ r.level|risk_badge }}">{{ r.level }}</span> {{ r.probability }}%
+    <div class="risk-bar mt-1"><div class="bg-{{ r.level|risk_badge|cut:' text-dark' }}" style="width: {{ r.probability }}%"></div></div></td>
+  <td>{{ r.expected_unsold }}</td><td>{{ r.expected_loss|inr }}</td><td class="small" style="max-width:280px">{{ r.action }}</td></tr>
+{% empty %}<tr><td colspan="10" class="text-muted">No batches.</td></tr>{% endfor %}</tbody></table></div>
+<div class="small-muted">Risk score = probability (from the Random Forest model) that at least 5% of the batch will remain unsold on its expiry date. Expected unsold = quantity &minus; (sales rate &times; days left &minus; stock ahead in FEFO).</div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block heading %}Confirm delete{% endblock %}
+{% block content %}
+<div class="card p-4" style="max-width: 560px;">
+  <p>Delete <b>{{ object }}</b>? This cannot be undone.</p>
+  <form method="post">{% csrf_token %}
+    <button class="btn btn-danger">Delete</button>
+    <a href="{{ view.success_url }}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

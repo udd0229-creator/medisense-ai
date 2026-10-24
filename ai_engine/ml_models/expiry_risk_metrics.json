@@ -1,0 +1,80 @@
+{
+  "trained_at": "2026-10-23 14:33",
+  "algorithm": "Random Forest (200 trees, max depth 12)",
+  "n_samples": 6000,
+  "n_train": 4800,
+  "n_test": 1200,
+  "positive_rate": 0.322,
+  "accuracy": 0.895,
+  "precision": 0.8186,
+  "recall": 0.8653,
+  "f1": 0.8413,
+  "roc_auc": 0.9621,
+  "confusion_matrix": [
+    [
+      740,
+      74
+    ],
+    [
+      52,
+      334
+    ]
+  ],
+  "feature_importance": [
+    {
+      "feature": "coverage_ratio",
+      "importance": 0.4524
+    },
+    {
+      "feature": "days_to_expiry",
+      "importance": 0.3098
+    },
+    {
+      "feature": "days_of_stock",
+      "importance": 0.104
+    },
+    {
+      "feature": "quantity",
+      "importance": 0.0381
+    },
+    {
+      "feature": "sales_trend",
+      "importance": 0.034
+    },
+    {
+      "feature": "avg_daily_sales",
+      "importance": 0.0233
+    },
+    {
+      "feature": "unit_price",
+      "importance": 0.0205
+    },
+    {
+      "feature": "qty_ahead",
+      "importance": 0.0179
+    }
+  ],
+  "comparison": {
+    "Logistic Regression": {
+      "accuracy": 0.9092,
+      "precision": 0.9014,
+      "recall": 0.8057,
+      "f1": 0.8509,
+      "roc_auc": 0.9651
+    },
+    "Decision Tree": {
+      "accuracy": 0.875,
+      "precision": 0.8242,
+      "recall": 0.7772,
+      "f1": 0.8,
+      "roc_auc": 0.8964
+    },
+    "Random Forest": {
+      "accuracy": 0.895,
+      "precision": 0.8186,
+      "recall": 0.8653,
+      "f1": 0.8413,
+      "roc_auc": 0.9621
+    }
+  }
+}

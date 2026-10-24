@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block actions %}<a href="{% url 'sale_create' %}" class="btn btn-brand btn-sm"><i class="bi bi-receipt"></i> New Sale</a>
+<a href="{% url 'batch_add' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-plus"></i> Receive Stock</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3"><div class="card kpi p-3"><div class="d-flex justify-content-between">
+    <div><div class="label">Stock value</div><div class="value">{{ kpi.stock_value|inr }}</div>
+    <div class="small-muted">{{ kpi.batches }} batches &middot; {{ kpi.medicines }} medicines</div></div>
+    <i class="bi bi-box-seam text-primary"></i></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi p-3"><div class="d-flex justify-content-between">
+    <div><div class="label">High-risk / expired batches</div><div class="value text-danger">{{ kpi.high_risk }} / {{ kpi.expired }}</div>
+    <div class="small-muted">predicted by AI model</div></div>
+    <i class="bi bi-exclamation-triangle text-danger"></i></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi p-3"><div class="d-flex justify-content-between">
+    <div><div class="label">Potential expiry loss</div><div class="value text-warning">{{ kpi.potential_loss|inr }}</div>
+    <div class="small-muted">unsold units &times; cost</div></div>
+    <i class="bi bi-currency-rupee text-warning"></i></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi p-3"><div class="d-flex justify-content-between">
+    <div><div class="label">Sales (30 days)</div><div class="value text-success">{{ kpi.sales_30|inr }}</div>
+    <div class="small-muted">{{ kpi.order_now }} medicines need reorder</div></div>
+    <i class="bi bi-graph-up text-success"></i></div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-8"><div class="card p-3 h-100"><h2 class="h6">Daily sales, last 30 days (₹)</h2><div style="position:relative;height:260px"><canvas id="salesChart"></canvas></div></div></div>
+  <div class="col-lg-4"><div class="card p-3 h-100"><h2 class="h6">Batches by expiry risk</h2><div style="position:relative;height:260px"><canvas id="riskChart"></canvas></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card p-3 h-100">
+    <div class="d-flex justify-content-between"><h2 class="h6">Batches needing action</h2><a href="{% url 'expiry_risk' %}" class="small">View all</a></div>
+    <div class="table-responsive"><table class="table table-sm mb-0">
+      <thead><tr><th>Medicine / batch</th><th>Expiry</th><th>Qty</th><th>Risk</th><th>Action</th></tr></thead>
+      <tbody>{% for r in top_risks %}<tr>
+        <td><a href="{% url 'medicine_detail' r.batch.medicine_id %}">{{ r.batch.medicine.name }}</a><div class="small-muted">{{ r.batch.batch_no }}</div></td>
+        <td>{{ r.batch.expiry_date|date:"d M Y" }}</td><td>{{ r.batch.quantity }}</td>
+        <td><span class="badge bg-{{ r.level|risk_badge }}">{{ r.level }} {{ r.probability }}%</span></td>
+        <td class="small">{{ r.action }}</td></tr>
+      {% empty %}<tr><td colspan="5" class="text-muted">No risky batches.</td></tr>{% endfor %}</tbody>
+    </table></div></div></div>
+  <div class="col-lg-5"><div class="card p-3 h-100">
+    <h2 class="h6">Stock value expiring by month (₹)</h2><div style="position:relative;height:170px"><canvas id="expiryChart"></canvas></div>
+    <div class="d-flex justify-content-between mt-3"><h2 class="h6">Reorder now</h2><a href="{% url 'reorder' %}" class="small">Planner</a></div>
+    <table class="table table-sm mb-0"><thead><tr><th>Medicine</th><th>Stock</th><th>ROP</th><th>Order</th></tr></thead>
+      <tbody>{% for r in order_now %}<tr><td>{{ r.medicine.name }}</td><td>{{ r.stock }}</td><td>{{ r.reorder_point }}</td><td><b>{{ r.order_qty }}</b></td></tr>
+      {% empty %}<tr><td colspan="4" class="text-muted">Stock levels are healthy.</td></tr>{% endfor %}</tbody></table>
+  </div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const d = {{ chart|safe }};
+new Chart(document.getElementById('salesChart'), {type: 'line', data: {labels: d.sales_labels,
+  datasets: [{label: 'Sales ₹', data: d.sales_values, borderColor: '#0f766e', backgroundColor: 'rgba(15,118,110,.1)', fill: true, tension: .3}]},
+  options: {plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}});
+new Chart(document.getElementById('riskChart'), {type: 'doughnut', data: {labels: d.risk_labels,
+  datasets: [{data: d.risk_values, backgroundColor: ['#334155', '#dc2626', '#f59e0b', '#16a34a']}]},
+  options: {plugins: {legend: {position: 'bottom'}}}});
+new Chart(document.getElementById('expiryChart'), {type: 'bar', data: {labels: d.expiry_labels,
+  datasets: [{label: '₹ expiring', data: d.expiry_values, backgroundColor: '#f59e0b'}]},
+  options: {plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}});
+</script>
+{% endblock %}

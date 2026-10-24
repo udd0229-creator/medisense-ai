@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}Batches{% endblock %}
+{% block heading %}Batches / Stock{% endblock %}
+{% block actions %}<a href="{% url 'batch_add' %}" class="btn btn-brand btn-sm"><i class="bi bi-plus"></i> Receive Batch</a>{% endblock %}
+{% block content %}
+<div class="card p-3">
+<div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
+  <div class="btn-group btn-group-sm">
+    <a href="?show=stock" class="btn btn-outline-secondary {% if show == 'stock' %}active{% endif %}">In stock</a>
+    <a href="?show=soon" class="btn btn-outline-secondary {% if show == 'soon' %}active{% endif %}">Expiring in 90 days</a>
+    <a href="?show=expired" class="btn btn-outline-secondary {% if show == 'expired' %}active{% endif %}">Expired</a>
+    <a href="?show=all" class="btn btn-outline-secondary {% if show == 'all' %}active{% endif %}">All</a>
+  </div>
+  <form class="d-flex gap-2" method="get"><input type="hidden" name="show" value="{{ show }}">
+    <input name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" placeholder="Batch no, medicine, supplier">
+    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button></form>
+</div>
+<div class="table-responsive"><table class="table table-hover table-sm">
+<thead><tr><th>Medicine</th><th>Batch no</th><th>Supplier</th><th>Mfg</th><th>Expiry</th><th>Days left</th><th>Qty</th><th>Cost/unit</th><th>Value</th><th></th></tr></thead>
+<tbody>{% for b in object_list %}<tr class="{% if b.is_expired %}table-secondary{% endif %}">
+  <td><a href="{% url 'medicine_detail' b.medicine_id %}">{{ b.medicine.name }}</a></td><td>{{ b.batch_no }}</td>
+  <td class="small">{{ b.supplier|default:"-" }}</td><td>{{ b.mfg_date|date:"M Y" }}</td><td>{{ b.expiry_date|date:"d M Y" }}</td>
+  <td>{% if b.is_expired %}<span class="badge bg-dark">Expired</span>{% elif b.days_to_expiry <= 90 %}<span class="badge bg-warning text-dark">{{ b.days_to_expiry }}</span>{% else %}{{ b.days_to_expiry }}{% endif %}</td>
+  <td>{{ b.quantity }}/{{ b.quantity_received }}</td><td>{{ b.purchase_price|inr }}</td><td>{{ b.stock_value|inr }}</td>
+  <td class="text-end text-nowrap"><a href="{% url 'batch_edit' b.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+  <a href="{% url 'batch_delete' b.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a></td></tr>
+{% empty %}<tr><td colspan="10" class="text-muted">No batches.</td></tr>{% endfor %}</tbody></table></div>
+{% include "inventory/_pagination.html" %}
+</div>
+{% endblock %}

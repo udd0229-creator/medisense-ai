@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}AI Model{% endblock %}
+{% block heading %}AI Model: Expiry Risk Classifier{% endblock %}
+{% block actions %}{% if user.is_staff %}<form method="post" action="{% url 'retrain' %}" class="d-inline">{% csrf_token %}
+<button class="btn btn-brand btn-sm"><i class="bi bi-arrow-repeat"></i> Retrain model</button></form>{% endif %}{% endblock %}
+{% block content %}
+{% if not m %}<div class="alert alert-warning">Model not trained yet. Run <code>python manage.py train_model</code> or press Retrain.</div>{% else %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg"><div class="card kpi p-3"><div class="label">Accuracy</div><div class="value">{{ m.accuracy|pct }}</div></div></div>
+  <div class="col-6 col-lg"><div class="card kpi p-3"><div class="label">Precision</div><div class="value">{{ m.precision|pct }}</div></div></div>
+  <div class="col-6 col-lg"><div class="card kpi p-3"><div class="label">Recall</div><div class="value">{{ m.recall|pct }}</div></div></div>
+  <div class="col-6 col-lg"><div class="card kpi p-3"><div class="label">F1 score</div><div class="value">{{ m.f1|pct }}</div></div></div>
+  <div class="col-6 col-lg"><div class="card kpi p-3"><div class="label">ROC-AUC</div><div class="value">{{ m.roc_auc }}</div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card p-3 h-100"><h2 class="h6">Feature importance</h2><div style="position:relative;height:280px"><canvas id="fi"></canvas></div></div></div>
+  <div class="col-lg-6"><div class="card p-3 h-100"><h2 class="h6">Model details</h2>
+    <table class="table table-sm"><tbody>
+      <tr><th>Algorithm</th><td>{{ m.algorithm }}</td></tr>
+      <tr><th>Trained at</th><td>{{ m.trained_at }}</td></tr>
+      <tr><th>Dataset</th><td>{{ m.n_samples }} batches ({{ m.n_train }} train / {{ m.n_test }} test); {{ m.positive_rate|pct }} expired</td></tr>
+      <tr><th>Confusion matrix</th><td>
+        <table class="table table-bordered table-sm text-center mb-0" style="max-width:300px">
+          <tr><td></td><th>Pred. sold</th><th>Pred. expired</th></tr>
+          <tr><th>Actual sold</th><td class="table-success">{{ m.confusion_matrix.0.0 }}</td><td>{{ m.confusion_matrix.0.1 }}</td></tr>
+          <tr><th>Actual expired</th><td>{{ m.confusion_matrix.1.0 }}</td><td class="table-success">{{ m.confusion_matrix.1.1 }}</td></tr></table></td></tr>
+    </tbody></table>
+    <h2 class="h6 mt-2">Algorithm comparison (same test set)</h2>
+    <table class="table table-sm mb-0"><thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>AUC</th></tr></thead><tbody>
+    {% for name, s in m.comparison.items %}<tr class="{% if name == 'Random Forest' %}table-success{% endif %}"><td>{{ name }}</td><td>{{ s.accuracy|pct }}</td><td>{{ s.precision|pct }}</td><td>{{ s.recall|pct }}</td><td>{{ s.f1|pct }}</td><td>{{ s.roc_auc }}</td></tr>{% endfor %}
+    </tbody></table>
+    <div class="small-muted mt-2">Random Forest is used because it has the highest recall: it misses the fewest batches that really expire, which costs more than a false alarm.</div>
+  </div></div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if m %}
+<script>
+const fi = {{ m.feature_importance|safe_json }};
+new Chart(document.getElementById('fi'), {type: 'bar', data: {labels: fi.map(r => r.feature),
+  datasets: [{data: fi.map(r => r.importance), backgroundColor: '#0f766e'}]},
+  options: {indexAxis: 'y', plugins: {legend: {display: false}}}});
+</script>{% endif %}
+{% endblock %}

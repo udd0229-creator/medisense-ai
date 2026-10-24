@@ -1,0 +1,22 @@
+{% with u=request.resolver_match.url_name %}
+<div class="nav-label">Overview</div>
+<a class="nav-link {% if u == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<div class="nav-label">AI Insights</div>
+<a class="nav-link {% if u == 'expiry_risk' %}active{% endif %}" href="{% url 'expiry_risk' %}"><i class="bi bi-exclamation-triangle"></i> Expiry Risk</a>
+<a class="nav-link {% if u == 'forecast' %}active{% endif %}" href="{% url 'forecast' %}"><i class="bi bi-graph-up-arrow"></i> Demand Forecast</a>
+<a class="nav-link {% if u == 'reorder' %}active{% endif %}" href="{% url 'reorder' %}"><i class="bi bi-cart-check"></i> Reorder Planner</a>
+<a class="nav-link {% if u == 'model_info' %}active{% endif %}" href="{% url 'model_info' %}"><i class="bi bi-cpu"></i> AI Model</a>
+<div class="nav-label">Inventory</div>
+<a class="nav-link {% if u == 'sale_create' %}active{% endif %}" href="{% url 'sale_create' %}"><i class="bi bi-receipt"></i> New Sale (FEFO)</a>
+<a class="nav-link {% if 'medicine' in u %}active{% endif %}" href="{% url 'medicine_list' %}"><i class="bi bi-capsule"></i> Medicines</a>
+<a class="nav-link {% if 'batch' in u %}active{% endif %}" href="{% url 'batch_list' %}"><i class="bi bi-box-seam"></i> Batches / Stock</a>
+<a class="nav-link {% if u == 'sale_list' %}active{% endif %}" href="{% url 'sale_list' %}"><i class="bi bi-clock-history"></i> Sales History</a>
+<a class="nav-link {% if 'supplier' in u %}active{% endif %}" href="{% url 'supplier_list' %}"><i class="bi bi-truck"></i> Suppliers</a>
+<a class="nav-link {% if 'category' in u %}active{% endif %}" href="{% url 'category_list' %}"><i class="bi bi-tags"></i> Categories</a>
+<a class="nav-link {% if u == 'reports' %}active{% endif %}" href="{% url 'reports' %}"><i class="bi bi-file-earmark-arrow-down"></i> Reports</a>
+{% endwith %}
+<div class="mt-auto pt-3 small user-box">
+  <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+  <form method="post" action="{% url 'logout' %}" class="d-inline">{% csrf_token %}
+    <button class="btn btn-link btn-sm p-0 ms-2 text-white-50">Logout</button></form>
+</div>

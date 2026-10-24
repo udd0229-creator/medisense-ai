@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Demand Forecast{% endblock %}
+{% block heading %}AI Demand Forecast{% endblock %}
+{% block content %}
+<div class="card p-3 mb-3">
+<form class="d-flex gap-2" method="get"><select name="medicine" class="form-select form-select-sm" style="max-width:320px" onchange="this.form.submit()">
+{% for m in medicines %}<option value="{{ m.pk }}" {% if m.pk == selected.pk %}selected{% endif %}>{{ m.name }}</option>{% endfor %}</select></form>
+</div>
+{% if fc %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Forecast next 30 days</div><div class="value">{{ fc.total|floatformat:0 }}</div><div class="small-muted">{{ selected.unit }}s</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Avg daily demand</div><div class="value">{{ fc.daily_mean|floatformat:1 }}</div><div class="small-muted">std dev {{ fc.daily_std|floatformat:1 }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Method selected</div><div class="value fs-6 mt-2">{{ fc.method }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Hold-out error (MAE)</div><div class="value">{{ fc.mae|default:"-" }}</div>
+    <div class="small-muted">{% if fc.lr_mae is not None %}Regression {{ fc.lr_mae }} vs moving avg {{ fc.baseline_mae }}{% else %}not enough history{% endif %}</div></div></div>
+</div>
+<div class="card p-3"><h2 class="h6">{{ selected.name }}: 90 days of sales and 30-day forecast</h2><div style="position:relative;height:320px"><canvas id="chart"></canvas></div>
+<div class="small-muted mt-2">Model: linear regression on time trend and day-of-week, trained on 90 days; tested on the last 14 days against a 7-day moving average. The method with lower error is used.</div></div>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if chart %}
+<script>
+const c = {{ chart|safe }};
+new Chart(document.getElementById('chart'), {type: 'line', data: {labels: c.labels, datasets: [
+  {label: 'Actual daily sales', data: c.history, borderColor: 'rgba(15,118,110,.45)', pointRadius: 1.5, borderWidth: 1},
+  {label: '7-day average', data: c.trend, borderColor: '#0f766e', pointRadius: 0, borderWidth: 2},
+  {label: 'Forecast', data: c.forecast, borderColor: '#f59e0b', borderDash: [6, 4], pointRadius: 0, borderWidth: 2}]},
+  options: {scales: {y: {beginAtZero: true, title: {display: true, text: 'Units / day'}}}}});
+</script>{% endif %}
+{% endblock %}

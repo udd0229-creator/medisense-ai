@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Categories{% endblock %}
+{% block heading %}Categories{% endblock %}
+{% block actions %}<a href="{% url 'category_add' %}" class="btn btn-brand btn-sm"><i class="bi bi-plus"></i> Add Category</a>{% endblock %}
+{% block content %}
+<div class="card p-3" style="max-width: 760px;">
+<table class="table table-hover table-sm"><thead><tr><th>Name</th><th>Description</th><th>Medicines</th><th></th></tr></thead>
+<tbody>{% for c in object_list %}<tr><td><b>{{ c.name }}</b></td><td>{{ c.description }}</td><td>{{ c.medicines.count }}</td>
+<td class="text-end text-nowrap"><a href="{% url 'category_edit' c.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+<a href="{% url 'category_delete' c.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a></td></tr>
+{% empty %}<tr><td colspan="4" class="text-muted">No categories.</td></tr>{% endfor %}</tbody></table>
+</div>
+{% endblock %}

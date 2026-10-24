@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}New Sale{% endblock %}
+{% block heading %}New Sale <span class="small-muted">(batches picked automatically by FEFO)</span>{% endblock %}
+{% block content %}
+<div class="row g-3">
+<div class="col-lg-5"><div class="card p-4">
+  <form method="post" novalidate>{% csrf_token %}
+    <div class="mb-3"><label class="form-label">Medicine *</label>{{ form.medicine }}
+      <div class="form-text" id="stockInfo"></div>{% for e in form.medicine.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="mb-3"><label class="form-label">Quantity *</label>{{ form.quantity }}
+      {% for e in form.quantity.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="mb-3"><label class="form-label">Discount %</label>{{ form.discount_percent }}</div>
+    <button class="btn btn-brand w-100"><i class="bi bi-check2-circle"></i> Complete Sale</button>
+  </form>
+  <div class="alert alert-info small mt-3 mb-0"><i class="bi bi-info-circle"></i> FEFO: units are taken from the batch that expires first. Expired batches are never sold.</div>
+</div></div>
+<div class="col-lg-7"><div class="card p-3"><h2 class="h6">Recent sales</h2>
+<table class="table table-sm"><thead><tr><th>Date</th><th>Medicine</th><th>Batch</th><th>Qty</th><th>Amount</th></tr></thead>
+<tbody>{% for s in recent %}<tr><td>{{ s.sale_date|date:"d M" }}</td><td>{{ s.medicine.name }}</td><td class="small">{{ s.batch.batch_no }}</td><td>{{ s.quantity }}</td><td>{{ s.amount|inr }}</td></tr>{% endfor %}</tbody></table>
+</div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const stock = {{ stock_json|safe }};
+const sel = document.getElementById('id_medicine'), info = document.getElementById('stockInfo');
+function show() { info.textContent = sel.value ? ('Usable stock: ' + (stock[sel.value] || 0)) : ''; }
+sel.addEventListener('change', show); show();
+</script>
+{% endblock %}

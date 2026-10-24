@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}Reorder Planner{% endblock %}
+{% block heading %}Reorder Planner <span class="small-muted">(EOQ + safety stock, capped by shelf life)</span>{% endblock %}
+{% block actions %}<a href="{% url 'reorder_csv' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download"></i> Purchase order CSV</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+{% for name, n, color in cards %}
+  <div class="col-6 col-lg-3"><a class="text-decoration-none" href="?status={{ name|urlencode }}"><div class="card kpi p-3 border-start border-4 border-{{ color }} {% if status == name %}bg-light{% endif %}"><div class="label">{{ name }}</div><div class="value text-{{ color }}">{{ n }}</div></div></a></div>
+{% endfor %}
+  <div class="col-12 small">{% if status %}Showing: <b>{{ status }}</b> &middot; <a href="?">show all</a>{% endif %}{% if total_cost %} &middot; Estimated cost of all "Order now" items: <b>{{ total_cost|inr }}</b>{% endif %}</div>
+</div>
+<div class="card p-3">
+<div class="table-responsive"><table class="table table-hover table-sm">
+<thead><tr><th>Medicine</th><th>Supplier</th><th>Stock</th><th>Demand/day</th><th>Days cover</th><th>Lead time</th><th>Safety stock</th><th>Reorder point</th><th>EOQ</th><th>Shelf-life cap</th><th>Order qty</th><th>Est. cost</th><th>Status</th></tr></thead>
+<tbody>{% for r in rows %}<tr>
+  <td><a href="{% url 'medicine_detail' r.medicine.pk %}">{{ r.medicine.name }}</a></td><td class="small">{{ r.medicine.default_supplier|default:"-" }}</td>
+  <td>{{ r.stock }}</td><td>{{ r.daily_demand }}</td><td>{{ r.days_cover|default:"-" }}</td><td>{{ r.lead_time }}d</td><td>{{ r.safety_stock }}</td><td>{{ r.reorder_point }}</td>
+  <td>{{ r.eoq }}</td><td>{{ r.shelf_cap }}</td><td><b>{{ r.order_qty|default:"-" }}</b></td><td>{% if r.order_qty %}{{ r.order_cost|inr }}{% else %}-{% endif %}</td>
+  <td><span class="badge bg-{{ r.status|status_badge }}">{{ r.status }}</span>{% if r.order_qty %} <a class="small" href="{% url 'batch_add' %}?medicine={{ r.medicine.pk }}&qty={{ r.order_qty }}">receive</a>{% endif %}</td></tr>
+{% endfor %}</tbody></table></div>
+<div class="small-muted">SS = z&middot;&sigma;&middot;&radic;L (z = 1.65 for 95% service), ROP = d&middot;L + SS, EOQ = &radic;(2DS/H) with S = &#8377;200 per order and H = 20% of unit cost per year. Order is placed when stock &le; ROP and is never more than can be sold in 80% of the shelf life.</div>
+</div>
+{% endblock %}

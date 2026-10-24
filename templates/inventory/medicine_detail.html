@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}{{ medicine.name }}{% endblock %}
+{% block heading %}{{ medicine.name }} <span class="small-muted">{{ medicine.generic_name }} &middot; {{ medicine.category }}</span>{% endblock %}
+{% block actions %}<a href="{% url 'sale_create' %}?medicine={{ medicine.pk }}" class="btn btn-brand btn-sm">Sell</a>
+<a href="{% url 'batch_add' %}?medicine={{ medicine.pk }}{% if reorder.order_qty %}&qty={{ reorder.order_qty }}{% endif %}" class="btn btn-outline-secondary btn-sm">Receive batch</a>
+<a href="{% url 'medicine_edit' medicine.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Usable stock</div><div class="value">{{ reorder.stock }}</div><div class="small-muted">{{ medicine.unit }}s &middot; {% if reorder.days_cover %}{{ reorder.days_cover }} days cover{% else %}no recent sales{% endif %}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Forecast, next 30 days</div><div class="value">{{ reorder.demand_30 }}</div><div class="small-muted">{{ reorder.daily_demand }}/day</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Reorder point</div><div class="value">{{ reorder.reorder_point }}</div><div class="small-muted">safety stock {{ reorder.safety_stock }}</div></div></div>
+  <div class="col-6 col-lg-3"><div class="card kpi p-3"><div class="label">Recommendation</div><div class="value"><span class="badge bg-{{ reorder.status|status_badge }} fs-6">{{ reorder.status }}</span></div><div class="small-muted">{% if reorder.order_qty %}order {{ reorder.order_qty }} (EOQ {{ reorder.eoq }}){% else %}EOQ {{ reorder.eoq }}, cap {{ reorder.shelf_cap }}{% endif %}</div></div></div>
+</div>
+<div class="card p-3 mb-3"><h2 class="h6">Daily sales (last 60 days) and 30-day forecast <span class="small-muted">&middot; {{ fc.method }}{% if fc.mae is not None %}, MAE {{ fc.mae }}{% endif %}</span></h2>
+<div style="position:relative;height:280px"><canvas id="fcChart"></canvas></div></div>
+<div class="card p-3 mb-3"><h2 class="h6">Batches in stock (FEFO order) with AI expiry risk</h2>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Batch</th><th>Expiry</th><th>Days left</th><th>Qty</th><th>Days of stock</th><th>Risk</th><th>Expected loss</th><th>Action</th></tr></thead>
+<tbody>{% for r in risks %}<tr><td>{{ r.batch.batch_no }}</td><td>{{ r.batch.expiry_date|date:"d M Y" }}</td><td>{{ r.batch.days_to_expiry }}</td><td>{{ r.batch.quantity }}</td>
+<td>{{ r.features.days_of_stock|default:"-" }}</td><td><span class="badge bg-{{ r.level|risk_badge }}">{{ r.level }} {{ r.probability }}%</span></td><td>{{ r.expected_loss|inr }}</td><td class="small">{{ r.action }}</td></tr>
+{% empty %}<tr><td colspan="8" class="text-muted">No stock.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card p-3"><h2 class="h6">Recent sales</h2><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Batch</th><th>Qty</th><th>Amount</th></tr></thead>
+<tbody>{% for s in recent_sales %}<tr><td>{{ s.sale_date|date:"d M Y" }}</td><td>{{ s.batch.batch_no }}</td><td>{{ s.quantity }}</td><td>{{ s.amount|inr }}</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const c = {{ chart|safe }};
+new Chart(document.getElementById('fcChart'), {type: 'line', data: {labels: c.labels, datasets: [
+  {label: 'Actual sales', data: c.history, borderColor: '#0f766e', pointRadius: 0, tension: .2},
+  {label: 'Forecast', data: c.forecast, borderColor: '#f59e0b', borderDash: [6, 4], pointRadius: 0, tension: .2}]},
+  options: {scales: {y: {beginAtZero: true, title: {display: true, text: 'Units / day'}}}}});
+</script>
+{% endblock %}

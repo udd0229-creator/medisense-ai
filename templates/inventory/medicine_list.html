@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load medisense %}
+{% block title %}Medicines{% endblock %}
+{% block heading %}Medicines{% endblock %}
+{% block actions %}<a href="{% url 'medicine_add' %}" class="btn btn-brand btn-sm"><i class="bi bi-plus"></i> Add Medicine</a>{% endblock %}
+{% block content %}
+<div class="card p-3">
+<form class="d-flex gap-2 mb-3" method="get">
+  <input name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" placeholder="Search name, generic, manufacturer" style="max-width:280px">
+  <select name="category" class="form-select form-select-sm" style="max-width:220px"><option value="">All categories</option>
+  {% for c in categories %}<option value="{{ c.id }}" {% if request.GET.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-search"></i></button>
+</form>
+<div class="table-responsive"><table class="table table-hover table-sm">
+<thead><tr><th>Name</th><th>Generic</th><th>Category</th><th>MRP</th><th>Usable stock</th><th>Storage</th><th></th></tr></thead>
+<tbody>{% for m in object_list %}<tr>
+  <td><a href="{% url 'medicine_detail' m.pk %}"><b>{{ m.name }}</b></a>{% if m.prescription_required %} <span class="badge bg-info-subtle text-info-emphasis">Rx</span>{% endif %}</td>
+  <td>{{ m.generic_name }}</td><td>{{ m.category }}</td><td>{{ m.mrp|inr }}</td>
+  <td>{{ m.stock|default:0 }} {{ m.unit }}{% if m.stock|default:0 < m.min_stock %} <span class="badge bg-danger">Low</span>{% endif %}</td>
+  <td class="small">{{ m.get_storage_display }}</td>
+  <td class="text-end text-nowrap"><a href="{% url 'medicine_edit' m.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+  <a href="{% url 'medicine_delete' m.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a></td></tr>
+{% empty %}<tr><td colspan="7" class="text-muted">No medicines found.</td></tr>{% endfor %}</tbody></table></div>
+{% include "inventory/_pagination.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MediSense AI{% endblock %} | MediSense AI</title>
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="mobile-bar d-md-none d-flex align-items-center justify-content-between px-3 py-2">
+  <a href="{% url 'dashboard' %}" class="brand text-decoration-none"><i class="bi bi-capsule-pill"></i> MediSense <span>AI</span></a>
+  <button class="btn btn-sm text-white fs-4 p-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-label="Open menu"><i class="bi bi-list"></i></button>
+</div>
+<div class="offcanvas offcanvas-start sidebar-offcanvas" tabindex="-1" id="mobileNav">
+  <div class="offcanvas-body sidebar d-flex flex-column p-3">
+    {% include "_nav.html" %}
+  </div>
+</div>
+<div class="d-flex">
+  <nav class="sidebar d-none d-md-flex flex-column p-3">
+    <a href="{% url 'dashboard' %}" class="brand mb-4 text-decoration-none">
+      <i class="bi bi-capsule-pill"></i> MediSense <span>AI</span>
+    </a>
+    {% include "_nav.html" %}
+  </nav>
+  <main class="flex-grow-1 p-3 p-md-4 main">
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+      <h1 class="h4 mb-0">{% block heading %}{% endblock %}</h1>
+      <div>{% block actions %}{% endblock %}</div>
+    </div>
+    {% for m in messages %}
+      <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show">{{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% block auth %}{% endblock %}
+{% endif %}
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}"></script>
+<script>Chart.defaults.maintainAspectRatio = false; Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
